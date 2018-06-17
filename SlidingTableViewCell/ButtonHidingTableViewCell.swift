@@ -15,18 +15,24 @@ class ButtonHidingTableViewCell: UITableViewCell {
     @IBOutlet weak var exButton: UIButton!
     @IBOutlet weak var moreButton: UIButton!
     
+    //Centered position of the slidingView
     var originalCenter = CGPoint()
-    var slideDistance: CGFloat!
+    //Distance to slide over
+    var slideDistance = CGFloat()
+    
+    //Delegate for handling sliding and unsliding events
     weak var delegate: ButtonHidingTableViewCellDelegate?
     
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
         
+        //Styling the buttons
         checkButton.setImage(StyleKit.imageOfCheckButton, for: .normal)
         exButton.setImage(StyleKit.imageOfExButton, for: .normal)
         moreButton.setImage(StyleKit.imageOfMoreButton, for: .normal)
         
+        //Styling the slidingView
         slidingView.backgroundColor = .purple
         slidingView.layer.cornerRadius = 10
         slidingView.layer.shadowColor = UIColor.gray.cgColor
@@ -40,6 +46,7 @@ class ButtonHidingTableViewCell: UITableViewCell {
         self.selectionStyle = .none
     }
     
+    //Update the sliding distance and center point after auto layout occurs
     override func layoutSubviews() {
         super.layoutSubviews()
         originalCenter = self.center
@@ -53,29 +60,35 @@ class ButtonHidingTableViewCell: UITableViewCell {
         }
         let translation = gesture.translation(in: self.contentView)
         
+        //The slidingView should move with respect to the getures x translation
         if gesture.state != .cancelled {
+            //If the slidingView is past half way or has been translated from left to right, "resistance" is added to the translation
             if originalCenter.x - slidingView.center.x > slideDistance || slidingView.center.x > originalCenter.x {
                 slidingView.center.x += translation.x / 2
             }
             else {
                 slidingView.center.x += translation.x
             }
-            
         } else {
             view.center = originalCenter
         }
         
+        //Determine the final position of the slidingView once the geture is over
         if gesture.state == .ended {
 
+            //Gesture is a quick swipe from right to left
             if gesture.velocity(in: view.superview).x < CGFloat(-500) {
                 slideOver()
             }
+            //Gesture is a quick swipe from left to right
             else if gesture.velocity(in: view.superview).x > CGFloat(500) {
                 slideBack()
             }
+            //Gesture has ended near the initial position
             else if originalCenter.x - slidingView.center.x < slideDistance / 4 {
                 slideBack()
             }
+            //Gesture has ended with the buttons exposed
             else if originalCenter.x - slidingView.center.x > slideDistance / 4 {
                 slideOver()
             }
@@ -84,6 +97,7 @@ class ButtonHidingTableViewCell: UITableViewCell {
         gesture.setTranslation(CGPoint.zero, in: self.contentView)
     }
     
+    //To be used on setting up a dequeued cell
     func update(showingButtons: Bool, delegate: ButtonHidingTableViewCellDelegate) {
         self.delegate = delegate
         if showingButtons {
@@ -93,6 +107,7 @@ class ButtonHidingTableViewCell: UITableViewCell {
         }
     }
     
+    //Animate to expose buttons
     func slideOver() {
         delegate?.didSlide(self)
         UIView.animate(withDuration: 0.3) {
@@ -100,6 +115,7 @@ class ButtonHidingTableViewCell: UITableViewCell {
         }
     }
     
+    //Animate to hide buttons
     func slideBack() {
         delegate?.didSlideBack(self)
         UIView.animate(withDuration: 0.3) {
@@ -107,9 +123,11 @@ class ButtonHidingTableViewCell: UITableViewCell {
         }
     }
     
+    //To allow vertical scroll in the parent tableView when the slidingView is not sliding
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         if let panGesture = gestureRecognizer as? UIPanGestureRecognizer {
             let translation = panGesture.translation(in: self.contentView)
+            //Only begin the gesture if it is mostly horizontal
             if abs(translation.x) > abs(translation.y) {
                 return true
             }
@@ -124,7 +142,7 @@ class ButtonHidingTableViewCell: UITableViewCell {
 
 }
 
-
+//A Protocol defing a delegate for handling sliding information
 protocol ButtonHidingTableViewCellDelegate: class {
     func didSlide(_ cell:ButtonHidingTableViewCell)
     func didSlideBack(_ cell:ButtonHidingTableViewCell)

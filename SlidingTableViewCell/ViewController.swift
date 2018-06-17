@@ -12,20 +12,12 @@ class ViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
     
+    // Indexpath if there is a cell showing buttons, nil if not
     var showingButtonsIndex: IndexPath?
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
 }
 
+//TableView handling
 extension ViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -36,6 +28,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! ButtonHidingTableViewCell
 
         var showingButtons = false
+        //If the cell which has exposed buttons comes back into view
         if let showingIndex = showingButtonsIndex {
             showingButtons = indexPath == showingIndex
         }
@@ -44,15 +37,16 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         return cell
     }
     
-    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 200
     }
     
 }
 
+//Cell delegate handling
 extension ViewController: ButtonHidingTableViewCellDelegate {
     
+    //Invoked by the cell after sliding
     func didSlide(_ cell: ButtonHidingTableViewCell) {
         let slideIndex = tableView.indexPath(for: cell)
         if let previousIndex = showingButtonsIndex, let previousCell = tableView.cellForRow(at: previousIndex) as? ButtonHidingTableViewCell{
@@ -63,10 +57,12 @@ extension ViewController: ButtonHidingTableViewCellDelegate {
         showingButtonsIndex = slideIndex
     }
     
+    //Invoked by the cell after sliding back
     func didSlideBack(_ cell: ButtonHidingTableViewCell) {
         let slideIndex = tableView.indexPath(for: cell)
         if let previousIndex = showingButtonsIndex {
             if(slideIndex == previousIndex){
+                //The previously showing cell has been slid back
                 showingButtonsIndex = nil
             }
         }
